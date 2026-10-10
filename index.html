@@ -1130,6 +1130,13 @@ html.has-grad .app-header{border-image:var(--accent-grad) 1}html.has-grad .blob.
 /* keep the app out of sight (and the blobs + moving words visible) until someone is signed in */
 body:not([data-role="admin"]):not([data-role="employee"]) .app-header,
 body:not([data-role="admin"]):not([data-role="employee"]) .app-shell{visibility:hidden}
+/* moving words: keep them on even when the PC has "reduce motion" on (turn them off in Settings > Background instead) */
+@media (prefers-reduced-motion: reduce){.word-lane{display:block}}
+.word-lane.solid{opacity:.15}.word-lane.outline{opacity:.26}
+/* dark theme: let the background show through the header, sidebar and cards */
+[data-theme="dark"]{--card-bg:rgba(29,28,31,.76);--chrome-bg:rgba(29,28,31,.70)}
+[data-theme="dark"] .ui-card{-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+[data-theme="dark"] .app-header,[data-theme="dark"] .sidebar{-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 </style>
 </head>
 <body>
@@ -1174,6 +1181,12 @@ body:not([data-role="admin"]):not([data-role="employee"]) .app-shell{visibility:
 			<span class="logo-text">Dashboard</span>
 		</div>
     <nav class="top-nav">
+			<a href="index.html" class="active">Home</a>
+			<a href="Forms Page.html">Join Us</a>
+				  <a href="FAQ Page.html">FAQ</a>
+				  <a href="Services Schedule Page.html">Services Schedule</a>
+				  <a href="Gallery Page.html">Gallery</a>
+			<a href="About Us Page.html">About Us</a>
     </nav>
 	
 	<div class="header-user">
@@ -2285,7 +2298,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (c === 'auth/network-request-failed') return 'Network problem. Check your connection and try again.';
     if (c === 'auth/operation-not-allowed') return 'Email sign-in is not switched on in Firebase yet.';
     if (c === 'auth/unauthorized-domain') return 'This website address is not authorised in Firebase yet.';
-    return 'Something went wrong. Please try again.';
+    if (c === 'auth/invalid-api-key' || c === 'auth/api-key-not-valid') return 'The Firebase API key in this page is not valid. Copy it again from Firebase Project settings.';
+    if (c === 'auth/configuration-not-found') return 'Authentication is not switched on in Firebase yet (Firebase > Authentication > Get started).';
+    return 'Something went wrong (' + (c || (e && e.message) || 'unknown error') + '). Please try again.';
   };
 
   function view(v) {
