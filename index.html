@@ -1254,6 +1254,30 @@ html body .sidebar,html body .sidebar .side-list{scrollbar-width:none!important;
 html body .sidebar::-webkit-scrollbar,html body .sidebar .side-list::-webkit-scrollbar{display:none!important;width:0;height:0}
 @media(prefers-reduced-motion:reduce){.news-tile.kick-in,.news-refresh.loading svg{animation:none}}
 </style>
+<style>
+/* ===== hidden scrollbars on cards (still scrollable) ===== */
+.ui-card,.ui-card *,.preview-stage,.preview-stage *{scrollbar-width:none!important;-ms-overflow-style:none!important}
+.ui-card::-webkit-scrollbar,.ui-card *::-webkit-scrollbar,.preview-stage::-webkit-scrollbar,.preview-stage *::-webkit-scrollbar{display:none!important;width:0!important;height:0!important}
+.ui-card,.ui-card .ui-card-inner{overscroll-behavior:contain}
+/* ===== collapsed sidebar scrolls too ===== */
+@media(min-width:769px){
+ html body .sidebar:not(.expanded){overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
+ html body .sidebar:not(.expanded) .side-cards{flex:none;min-height:auto}
+ html body .sidebar:not(.expanded) .side-list{overflow:visible}
+ /* the real item stays put; a floating copy (.peek-item) does the sliding so nothing clips or jumps */
+ html body .sidebar:not(.expanded) .sidebar-item.held,html body .sidebar:not(.expanded) .sidebar-item:focus-visible{width:50px}
+ html body .sidebar:not(.expanded) .sidebar-item.held:not(.active){box-shadow:none}
+}
+.peek-item{position:fixed;z-index:90;display:flex;align-items:center;gap:.8rem;padding:0 13px;box-sizing:border-box;overflow:hidden;border-radius:10px;border:1px solid var(--accent-blue);background:var(--bg-surface);color:var(--text-primary);box-shadow:0 6px 18px rgba(0,0,0,.45);pointer-events:none;white-space:nowrap;font:600 .8rem 'JetBrains Mono',ui-monospace,Menlo,monospace;transition:width .28s cubic-bezier(.4,0,.2,1)}
+.peek-item.rt{flex-direction:row-reverse;justify-content:flex-start}
+.peek-item .ico{display:inline-flex;flex:none}
+.peek-item .lbl{display:inline;opacity:0;transition:opacity .18s}
+.peek-item.on .lbl{opacity:1;transition-delay:.08s}
+.peek-item .sl{display:none}.peek-item.muted .sl{display:inline}.peek-item.muted .ico{opacity:.5}
+.peek-item.act{background:var(--accent-blue);color:#fff}
+html.has-grad .peek-item.act{background:var(--accent-grad)}
+html.no-motion .peek-item,html.no-motion .peek-item .lbl{transition:none!important}
+</style>
 </head>
 <body>
 <div class="morph-bg" aria-hidden="true"><i class="blob b1"></i><i class="blob b2"></i><i class="blob b3"></i><div class="word-lanes" id="word-lanes"></div></div>
@@ -1300,7 +1324,7 @@ html body .sidebar::-webkit-scrollbar,html body .sidebar .side-list::-webkit-scr
     <nav class="top-nav"></nav>
 	
 	<div class="header-user">
-		<a href="accounting.html" class="hdr-link" id="acct-link">Accounting</a>
+		<a href="Accounting Page.html" class="hdr-link" id="acct-link">Accounting</a>
 		<span id="user-badge" class="user-badge"></span>
 		<button id="theme-toggle" class="theme-btn" aria-label="Toggle Theme">🌓</button>
 		<button id="logout-btn" class="theme-btn" aria-label="Sign out" title="Sign out">⎋</button>
@@ -1690,6 +1714,46 @@ addEventListener('resize',window.newsFit);
 var nav=document.querySelector('.sidebar-item[data-target="news"]');
 if(nav)nav.addEventListener('click',function(){window.newsFit();setTimeout(window.newsKick,0)});
 setTimeout(window.newsFit,800);
+})();
+</script>
+<script>
+/* collapsed sidebar: hold (or keyboard-focus) an icon to slide its label out; slides back in on release */
+(function(){
+var sb=document.getElementById('sidebar');if(!sb)return;
+var W=214,pk=null,own=null;
+var desk=function(){return matchMedia('(min-width:769px)').matches&&!sb.classList.contains('expanded')};
+function place(){if(!pk||!own)return;var r=own.getBoundingClientRect();pk.style.top=r.top+'px';if(pk.dataset.rt)pk.style.right=(innerWidth-r.right)+'px';else pk.style.left=r.left+'px'}
+function kill(){if(pk)pk.remove();pk=null;own=null}
+function show(it){
+ if(!desk())return;kill();
+ var r=it.getBoundingClientRect(),rt=document.documentElement.classList.contains('side-right');
+ var p=document.createElement('div');
+ p.className='peek-item'+(it.classList.contains('active')?' act':'')+(it.classList.contains('muted')?' muted':'')+(rt?' rt':'');
+ p.setAttribute('aria-hidden','true');p.innerHTML=it.innerHTML;
+ p.style.top=r.top+'px';p.style.height=r.height+'px';p.style.width=r.width+'px';
+ if(rt){p.dataset.rt='1';p.style.right=(innerWidth-r.right)+'px'}else p.style.left=r.left+'px';
+ document.body.appendChild(p);pk=p;own=it;
+ void p.offsetWidth;p.classList.add('on');p.style.width=W+'px';
+}
+function hide(it){
+ if(!pk||(it&&own!==it))return;
+ var p=pk,w=own.getBoundingClientRect().width;pk=null;own=null;
+ p.classList.remove('on');p.style.width=w+'px';
+ setTimeout(function(){p.remove()},320);
+}
+new MutationObserver(function(ms){ms.forEach(function(m){
+ var t=m.target;
+ if(t===sb){if(sb.classList.contains('expanded'))kill();return}
+ if(!t.classList||!t.classList.contains('sidebar-item'))return;
+ var was=(m.oldValue||'').split(/\s+/).indexOf('held')>-1;
+ if(t.classList.contains('held')&&!was)show(t);
+})}).observe(sb,{attributes:true,attributeFilter:['class'],attributeOldValue:true,subtree:true});
+['pointerup','pointercancel'].forEach(function(e){document.addEventListener(e,function(){hide()},true)});
+sb.addEventListener('pointerleave',function(){hide()});
+sb.addEventListener('focusin',function(e){var t=e.target.closest&&e.target.closest('.sidebar-item');if(t&&t.matches(':focus-visible'))show(t)});
+sb.addEventListener('focusout',function(e){var t=e.target.closest&&e.target.closest('.sidebar-item');if(t)hide(t)});
+sb.addEventListener('scroll',place,{passive:true});
+addEventListener('resize',function(){if(!desk())kill()});
 })();
 </script>
 </body>
