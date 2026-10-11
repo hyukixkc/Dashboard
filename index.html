@@ -1247,6 +1247,9 @@ html.has-grad .news-refresh:hover:not(:disabled){background:var(--accent-grad)!i
 .news-tile.kick-in{animation:tile-kick .75s cubic-bezier(.2,.9,.3,1) backwards;animation-delay:calc(var(--i,0)*70ms + 380ms);will-change:transform,opacity}
 @keyframes tile-kick{0%{opacity:0;transform:translateY(40px) scale(.35)}45%{opacity:1;transform:translateY(-14px) scale(1.12)}68%{transform:translateY(5px) scale(.95)}85%{transform:translateY(-2px) scale(1.02)}100%{opacity:1;transform:none}}
 /* sidebar scrollbar: still scrolls, just invisible */
+#sidebar,#sidebar.expanded,#sidebar *,html body #sidebar,html body #sidebar.expanded{scrollbar-width:none!important;-ms-overflow-style:none!important;scrollbar-color:transparent transparent!important}
+#sidebar::-webkit-scrollbar,#sidebar.expanded::-webkit-scrollbar,#sidebar *::-webkit-scrollbar{display:none!important;width:0!important;height:0!important;background:transparent!important}
+#sidebar{overscroll-behavior:contain}
 html body .sidebar,html body .sidebar .side-list{scrollbar-width:none!important;-ms-overflow-style:none}
 html body .sidebar::-webkit-scrollbar,html body .sidebar .side-list::-webkit-scrollbar{display:none!important;width:0;height:0}
 @media(prefers-reduced-motion:reduce){.news-tile.kick-in,.news-refresh.loading svg{animation:none}}
